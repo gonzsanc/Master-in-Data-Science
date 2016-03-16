@@ -1,0 +1,84 @@
+ 
+google -> sacó mapreduce
+yahoo! -> sacó hadoop q está guay para trabajar en gran cantidad de datos.
+mahout -> una patada en los huevos.
+
+Keen barcelona videojuegos facebook <- buen sitio para echar.
+Surgieron técnicas para no escribir machine learning directamente en java.
+
+Spark ha revolucionado la forma de escribir machine learning sin tener 
+que estar picando Java, Mahout, etc...
+
+Spark funciona sobre todo con Scala, porque está escrito en eso.
+Menos en python y Java.
+Mucho menos en R que empezó hace poco.
+
+Unifica el tratamiento de SQL unificando todos los conceptos.
+Spark SQL <- 
+Spark Streaming <- es batch processing, no exactamente streaming, pero es muy rápido.
+MLib <- Machine learning.
+GraphX <- Grafos.
+
+echo
+
+La programación funcional es la mejor forma de atacar problemas de Map/Reduce
+
+Primero se manda a trabajar los datos en ordenadores distribuidos (map), luego se recogen de las distribuciones de las distribuciones y luego se unen (reduce).
+
+No queremos mutable data porque puede cambiar en un nodo. No usamos variables. Usamos la programación funcional sin embargo (cálculo landa).
+
+Un for sería un "map".
+
+Reduce combina en cada iteracción elementos.
+Por eso reduce solo puede combinar elementos del mismo tipo.
+Por ello las transformaciones no han de cambiar el tipo de los datos en el
+proceso.
+
+
+Para grandes cantidades de datos, no es viable recorrer todos los datos
+para cada operación.
+
+Así que paso, por ejemplo, para calcular la media:
+
+a <- vector de datos
+a -> paso un vecotr de unos para hacer el count de a con tantos unos 
+     como elementos de a.
+a -> otro vector con los cuadrados de a (a2)
+
+Para ello cogemos todos los elementos que vamos a pasar al map y los insertamos, por ejemplo, en una tupla.
+
+======== SPARK ==========
+
+sc.parallelize <- se le pasa algo para que lo pase a distribuido.
+PythonRDD.scala:423 <-- RDD <-- resilient distributed dataset. Lazy evalutaion <- porque hasta que no se le mande hacer un reducer no hace nada.
+Lo q hace spark es guardar memoria de todo lo que se ha hecho.
+http://localhost:4040/jobs/ <- spark gui para ver lo que ocurren en spark.
+
+collect() <- coge todo lo que se había paralelizado y lo ejecuta y se lo trae.
+
+take, count tb son acciones de spark.
+flatmap -> es un map más un filter.
+
+El lineage sirve para recordar todos los pasos que va a hacer porque si cae un equipo ha de recordar spark lo que
+ha de hacer para reconstruir todo lo que se ha perdido en otro equipo.
+
+Hadoop no podía hacer ML porque escribía todo a disco. En cambio Spark escribe a memoria.
+Spark es read-only, es inmutable como abstracción general. No obstante Spark permite usar variables.
+
+En Spark se puede guardar a petición en memoria los procesos, órdenes. instrucciones...
+Serialize <- binario Deserialize <- más complejo, objeto con una estructura.
+
+
+Una vez en memoria, se puede acceder a la misma, quitar de la memoria, especificar cómo se guarda en memoria, etc....
+
+Particiones Spark -> en cuántas partes poner mis datos.
+
+Spark -> particionar -> meter en varios workers (equipos). Sobre un ordenador se pueden poner varias particiones. Según los hilos que tengamos en cada uno.
+
+glom -> muestra las particiones.
+
+group by key -> iterador me permite agrupar
+reduce by key -> primero las agrupa y luego las envía, entrada igual a salida.
+todo combinado -> combine by key.
+
+Apache permite ir a código fuente. Cómo combino elementos dentro de una partición, qué hago cuando encuentro un nuevo elemento. Cómo uno combinadores.

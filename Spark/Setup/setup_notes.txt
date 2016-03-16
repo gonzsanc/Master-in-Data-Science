@@ -1,0 +1,4 @@
+- cd ~
+- vi .zshrc ( o bien .bashrc o .bash_profile)
+- añade "export SPARK_HOME=/usr/local/spark"  en ese archivo
+- source .zshrc (o .bashrc o .bash_profile) 
