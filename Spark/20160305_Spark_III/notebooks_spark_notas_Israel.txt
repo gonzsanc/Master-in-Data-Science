@@ -1,0 +1,23 @@
+Hola,
+
+En este mensaje os adjunto los notebooks que hemos ido haciendo en clase en las dos 'ultimas semanas.
+
+Para continuar con el ejemplo del histograma de d'ias de antelaci'on que acabamos de hacer, os propongo 
+un ejercicio con una dificultad anhadida al ejercicio.
+
+En clase, hemos calculado el n'umero de tickets para grupo (para 0 d'ias de antelaci'on, para 1 d'ia de 
+antelaci'on, etc.). Ahora, queremos calcular tambi'en el precio medio de los tickets en cada uno de esos
+grupos. Para ello, tenemos que considerar que al calcular la fecha de salida nos hemos quedado solo con 
+la fecha m'inima. Ahora tendremos que calcular tambi'en la suma de los valores de los cupones, que es el
+precio total del ticket. Luego, cuando hagamos el reduceByKey, adem'as de contar tickets, habr'a que 
+calcular la media del precio de los tickets (teniendo en cuenta que la media directamente no se puede
+calcular en el reduceByKey -- pero al final tendremos una tupla con el n'umero total de tickets y la 
+suma de los valores de los tickets).
+
+Luego, tendremos que dibujar un scatter plot de d'ias de antelaci'on vs. precio medio del ticket.
+
+Se observa alguna influencia del n'umero de d'ias de antelaci'on de la compra en el precio medio? 
+(pod'eis adjuntar vuestro gr'afico de resultado al responder a este mensaje en Basecamp)
+
+Un saludo,
+Israel 
