@@ -1,0 +1,138 @@
+HOY NOS CONECTARMOS A UN SISTEMA DE NODOS GESTIONADO CON HADOOP.
+
+ssh -> sistema -> cluster hadoop
+Tenemos 2 sistemas de ficheros (uno local de la máquina remota q nos conectamos por ssh)
+y el de hadoop
+
+hdfs dfs -ls <- vemos el listado en el sistema de ficheros de hadoop.
+
+HADOOP:
+1. CÓMPUTO por un lado distribuimos el cómputo. Todos tienen q tener una misma configuración para poder 
+trabajar en conjunto.
+2. ARCHIVOS  - por otro lado distribuye los archivos.
+
+node manager <- es ordenador con el que el ordenador cliente se comunica dentro del cluster. Este ordenador
+manda sobre los otros ordenadores del cluster de hadoop.
+
+Hadoop es failproof. Copia los archivos distribuidos en todos los nodos. Cada ordenador tiene una copia de
+todos los ficheros. (no confirmado si todos en todos los ordenadores o un número entre todos).
+
+El factor de replicación de mis archivos es 3 (el standard). Esto signfica que se hacen 3 copias de 
+cada archivo y no más para replicarlos por seguridad.
+
+Cuando se manda una instrucción, se manda a todos los nodos. Cuando termina un cálculo, el nodos
+envía el mensaje de finalizado de vuelta al node manager.
+
+El principal cuello de botella de un sistema distribuido es cómo van los archivos moviéndose por la red.
+Spark ha avanzado muchísimo en este sentido.
+
+.sparkStaging <- archivos temporales de spark.
+
+
+hdfs dfs -ls /user <- lista todos los usuarios en el cluster.
+Al cargase algo se lleva a la carpeta .Trash.
+
+hdfs dfs -rm -R -skipTrash cluster2 <- se borra sin mandar a trash.
+
+subir un fichero desde el cliente (local) al clúster (hadoop).
+
+spark puede trabajar tb sobre hadoop,mongodb, s3, local, etc...
+spark siempre tiene un equivalente al nodemanager que se llama "application master".
+
+YARN <- interactua con el application master de spark y da más o menos recursos.
+
+yarn application -list <- muestra todas las aplicaciones abiertas.
+CTRL+D para salir cierra las aplicaciones abiertas por spark.
+pyspark <- abre spark
+
+yarn application -kill application_.... <- pinta de amarillo a rallas la aplicación.
+
+________________
+Trabajamos con pyspark
+
+sc <- el pyspark context <- cada cosa q queramos correr va a ir en el pyspark context.
+sc.textFile("./shakespeare.txt")
+
+sc.textFile("./shakespeare.txt").first() <- para ver la primera línea.
+
+Copia entre remoto y local (o local a remoto, es bidireccional).
+scp -P puertoN kschool20@cms.hadoop.flossystems.net:~/shakespeare.txt .
+
+el puerto puertoN es porque en esta máquina remota en concreto el puerto ssh está configurado ahí
+por motivos de seguridad.
+
+sc.textFile("./shakespeare.txt").take(5)
+
+Estamos creando un RDD y cada elemento del RDD es una línea de texto.
+Queremos tener varios documentos y poder analizarlos.
+Vamos a considerar que dada párrafo es un doc.
+
+Para ello tenemos q modificar la manera en q spark lee el fichero.
+
+archivo y tipo de entrada -> record delimiter \n\n
+
+    
+paragraphs = sc.newAPIHadoopFile('./shakespeare.txt', "org.apache.hadoop.mapreduce.lib.input.TextInputFormat","org.apache.hadoop.io.LongWritable", "org.apache.hadoop.io.Text",     conf={"textinputformat.record.delimiter": '\n\n'}).map(lambda l:l[1])
+
+paragraphs.take(10)
+Ahora tenemos un RDD de documentos pequeños.
+
+paragraphs.count()
+
+limpieza:
+
+paragraphs.map(lambda paragraph: re.sub('[^a-zA-Z0-9 ]','',paragraph.lower().strip()))
+
+EL espacio tampoco lo respeta.
+El hat es la negación entre corchetes. Lo que hace es quitar todo menos lo que hay en esos corchetes.
+strip <- trim.
+
+regexp 101 para testear expresiones regulares.
+cleanParagraphs = paragraphs.map(lambda paragraph: re.sub('[^a-zA-Z0-9 ]','',paragraph.lower().strip())) /
+.map(lambda paragraph: re.sub('[ ]+',' ',paragraph)) /
+.filter(lambda l: l!="") 
+
+o en varios pasos:
+Quitamos líneas vacías y espacios múltiples.
+cleanParagraphs = cleanParagraphs.map(lambda paragraph: re.sub('[ ]+',' ',paragraph))
+cleanParagraphs = cleanParagraphs.filter(lambda l: l!="")
+
+
+el (1) es xq está trabajando en local. En otros sistemas puede aparecer otros números relativos al número de particionades.
+
+#Vamos a ver q es ahora cleanParagrahps.
+>>> cleanParagraphs.toDebugString()
+'(1) PythonRDD[3] at RDD at PythonRDD.scala:43 []\n |  MapPartitionsRDD[2] at mapPartitions at SerDeUtil.scala:207 []\n |  MapPartitionsRDD[1] at map at PythonHadoopUtil.scala:188 []\n |  ./shakespeare.txt NewHadoopRDD[0] at newAPIHadoopFile at PythonRDD.scala:544 []'
+
+spark recuerda el linaje, de dónde vino.
+shakes ---> rddmap ---> rddmap --> pythonRDD
+
+DAG -> spark guarda los pasos.
+Spark no hace joins, sino cogroups realmente.
+
+cleanParagraphs.getStorageLevel() <- de los RDDs, para saber si está ya materializado y guardado o no y dónde o solo un conjunto de instrucciones.
+
+para salvaguardar los datos, usamos cache() (el método q hay por detrás es persist).
+
+cleanParagraphs.cache()
+
+localhost:4040 <- aquí está la gui de spark en el navegador!
+
+Igual que hemos cacheado (persistido) podemos hacer un unpersist() para que la caché se elimine.
+
+cleanParagrapsh.persist(getStorageLevel.MEMORY_ONLY) <- esto es equivalente a "caché". Es por defecto lo que se hace.
+
+cleanParagrapsh.persist(getStorageLevel.MEMORY_AND_DISK) <- otra opción.
+
+
+wordcount = wordcount.map(lambda p: len(p.split())) 
+wc = wordcount
+counts = wc.map(lambda e: (e, 1)).reduceByKey(lambda a, b: a + b)
+
+primero se va a cada partición, colapsa ahí y cuando ya no se puede agrupar más se manda para reducir.
+reducebykey agrupa las llaves antes de emitir.
+
+
+
+def countWords (par):
+    
